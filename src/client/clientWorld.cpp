@@ -35,8 +35,7 @@ static bool chunkMeshUploaded[8] = { false, false, false, false, false, false, f
 static bool unmeshCompleted = true;
 
 ClientWorld::ClientWorld(unsigned short renderDistance, unsigned long long seed, bool singleplayer,
-    const Position& playerPos) : m_integratedServer(singleplayer,
-    true, seed) {
+    const Position& playerPos) : m_integratedServer(seed) {
     //seed the random number generator and the simplex noise
     m_seed = seed;
     PCG_SeedRandom32(m_seed);
@@ -89,8 +88,11 @@ ClientWorld::ClientWorld(unsigned short renderDistance, unsigned long long seed,
         m_threadWaiting[i] = false;
     }
     m_singleplayer = singleplayer;
-    int playerBlockPosition[3] = { 0, 0, 0 };
-    float playerSubBlockPosition[3] = { 0.0f, 0.0f, 0.0f };
+    int playerBlockPosition[3] = { (int)std::floor(playerPos.x), (int)std::floor(playerPos.y),
+        (int)std::floor(playerPos.z) };
+    float playerSubBlockPosition[3] = { playerPos.x - (float)playerBlockPosition[0],
+        playerPos.y - (float)playerBlockPosition[1], playerPos.z -
+        (float)playerBlockPosition[2] };
     m_integratedServer.addPlayer(playerBlockPosition, playerSubBlockPosition, m_renderDistance);
 
     //calculate the offset chunk numbers for the neighbouring chunks
@@ -228,12 +230,9 @@ void ClientWorld::updatePlayerPos(float playerX, float playerY, float playerZ) {
     for (char i = 0; i < 3; i++) {
         m_updatingPlayerChunkPosition[i] = m_newPlayerChunkPosition[i];
     }
-    int blockPosition[3] = { m_playerChunkPosition[0] * constants::CHUNK_SIZE,
-                             m_playerChunkPosition[1] * constants::CHUNK_SIZE,
-                             m_playerChunkPosition[2] * constants::CHUNK_SIZE };
-    float subBlockPosition[3] = { playerX - blockPosition[0],
-        playerY - blockPosition[1],
-        playerZ - blockPosition[2] };
+    int blockPosition[3] = { (int)std::floor(playerX), (int)std::floor(playerY),
+        (int)std::floor(playerZ) };
+    float subBlockPosition[3] = { 0.0f, 0.0f, 0.0f };
 
     bool readyToRelable = false;
     while (m_unmeshNeeded && (!readyToRelable)) {
@@ -291,14 +290,15 @@ void ClientWorld::loadChunksAroundPlayerMultiplayer(char threadNum) {
     buildMeshesForNewChunksWithNeighbours(threadNum);
 }
 
-void ClientWorld::loadChunkFromPacket(Packet<unsigned char, 9 * constants::CHUNK_SIZE *
+int ClientWorld::loadChunkFromPacket(Packet<unsigned char, 9 * constants::CHUNK_SIZE *
     constants::CHUNK_SIZE * constants::CHUNK_SIZE>& payload) {
     Position chunkPosition;
-    m_integratedServer.loadChunkFromPacket(payload, chunkPosition);
+    int newChunksFound = m_integratedServer.loadChunkFromPacket(payload, chunkPosition);
     m_unmeshedChunksMtx.lock();
     m_unmeshedChunks.insert(chunkPosition);
     m_recentChunksBuilt.push(chunkPosition);
     m_unmeshedChunksMtx.unlock();
+    return newChunksFound;
 }
 
 void ClientWorld::unmeshChunks() {

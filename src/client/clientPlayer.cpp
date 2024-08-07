@@ -44,14 +44,14 @@ const int ClientPlayer::m_directions[18] = { 1, 0, 0,
                                        0, 0, 1,
                                        0, 0,-1 };
 
-ClientPlayer::ClientPlayer(int* position, ClientWorld* newWorld) {
+ClientPlayer::ClientPlayer(int* position, ClientWorld* mainWorld) {
     m_keyboardState = SDL_GetKeyboardState(NULL);
     m_lastMousePos[0] = m_lastMousePos[1] = 0;
     m_playing = false;
     m_lastPlaying = false;
     m_pausedMouseState = 0u;
 
-    m_mainWorld = newWorld;
+    m_mainWorld = mainWorld;
 
     viewCamera = Camera(glm::vec3(0.5f, 0.5f, 0.5f));
 
@@ -91,8 +91,6 @@ ClientPlayer::ClientPlayer(int* position, ClientWorld* newWorld) {
     m_time = 0.0;
     m_lastMousePoll = 0.0f;
 }
-
-
 
 void ClientPlayer::processUserInput(SDL_Window* sdl_window, int* windowDimensions, bool* windowLastFocus, bool* running, double currentTime, ClientNetworking& networking) {
     float DT = 1.0f/(float)constants::visualTPS;

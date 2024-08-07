@@ -28,9 +28,10 @@
 class ServerPlayer {
 private:
     unsigned short m_renderDistance;
-    unsigned short m_renderDiameter;
     float m_minUnloadedChunkDistance;
     unsigned int m_numChunks;  // The max number of chunks in the player's render distance
+    int m_targetNumChunks;
+    int m_chunkBufferSize;
     int m_blockPosition[3];
     float m_subBlockPosition[3];
     std::unique_ptr<Position[]> m_unloadedChunks;
@@ -47,12 +48,23 @@ private:
     void initNumChunks();
 public:
     ServerPlayer() {};
+    // The constructor for use by the actual server
     ServerPlayer(int playerID, int* blockPosition, float* subBlockPosition, unsigned short renderDistance, ENetPeer* peer, unsigned int gameTick);
+    // The constructor for use by the integrated server
     ServerPlayer(int playerID, int* blockPosition, float* subBlockPosition, unsigned short renderDistance);
     void updatePlayerPos(int* blockPosition, float* subBlockPosition);
     bool allChunksLoaded();
     void getNextChunkCoords(int* chunkCoords);
+    void setChunkLoaded(Position& chunkPosition);
     bool decrementNextChunk(Position* chunkPosition, bool* chunkOutOfRange);
+
+    inline int getNumLoadedChunks() {
+        return m_nextUnloadedChunk;
+    }
+    
+    inline int getChunkTarget() {
+        return m_targetNumChunks;
+    }
     
     inline int getID() const {
         return m_playerID;
@@ -88,6 +100,7 @@ public:
         blockPosition[1] = m_blockPosition[1];
         blockPosition[2] = m_blockPosition[2];
     }
+    void updateChunkTarget(int numChunksLoaded);
 };
 
 namespace std {

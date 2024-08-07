@@ -23,7 +23,7 @@
 #include "pch.h"
 
 enum PacketType {
-    ClientConnection, ChunkSent, ClientPosition, BlockReplaced
+    ClientConnection, ChunkSent, ClientPosition, BlockReplaced, ClientChunkProgress
 };
 
 template<typename T, unsigned int maxPayloadLength>
@@ -35,7 +35,7 @@ private:
     std::array<T, maxPayloadLength> m_payload;
 public:
     Packet(int peerID, short packetType, short payloadLength) :
-    m_packetType(packetType), m_peerID(peerID), m_payloadLength(payloadLength) { }
+    m_packetType(packetType), m_peerID(peerID), m_payloadLength(payloadLength) {}
 
     Packet() : m_payloadLength(0) {};
 

@@ -80,7 +80,12 @@ void ClientNetworking::receivePacket(ENetPacket* packet, ClientWorld& mainWorld)
         Packet<unsigned char, 9 * constants::CHUNK_SIZE * constants::CHUNK_SIZE *
             constants::CHUNK_SIZE> payload;
         memcpy(&payload, packet->data, packet->dataLength);
-        mainWorld.loadChunkFromPacket(payload);
+        int numChunksLoaded = mainWorld.loadChunkFromPacket(payload);
+        Packet<int, 1> responsePayload(mainWorld.getClientID(), PacketType::ClientChunkProgress, 1);
+        responsePayload[0] = numChunksLoaded;
+        ENetPacket* responsePacket = enet_packet_create((const void*)(&responsePayload),
+            responsePayload.getSize(), ENET_PACKET_FLAG_RELIABLE);
+        enet_peer_send(m_peer, 0, responsePacket);
     }
     break;
     case PacketType::BlockReplaced:
@@ -96,6 +101,7 @@ void ClientNetworking::receivePacket(ENetPacket* packet, ClientWorld& mainWorld)
     default:
         break;
     }
+    enet_packet_destroy(packet);
 }
 
 void ClientNetworking::receiveEvents(ClientWorld& mainWorld) {

@@ -116,7 +116,7 @@ private:
 	int m_mouseCalls;
 	int m_numRelights;
 
-	ServerWorld m_integratedServer;
+	ServerWorld<true> m_integratedServer;
 	int m_clientID;
 
 	void unloadMesh(const Position& chunkPosition);
@@ -160,7 +160,7 @@ public:
 	inline int getClientID() {
 		return m_clientID;
 	}
-	void loadChunkFromPacket(Packet<unsigned char, 9 * constants::CHUNK_SIZE *
+	int loadChunkFromPacket(Packet<unsigned char, 9 * constants::CHUNK_SIZE *
         constants::CHUNK_SIZE * constants::CHUNK_SIZE>& payload);
 };
 
